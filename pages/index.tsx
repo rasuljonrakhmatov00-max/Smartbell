@@ -1,63 +1,107 @@
 import React, { useState } from 'react';
 
 export default function Home() {
-  const [form, setForm] = useState({ fullName: '', phone: '', telegramId: '', address: '' });
+  const [form, setForm] = useState({ fullName: '', phone: '', address: '' });
+  const [file, setFile] = useState<File | null>(null);
+  const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoading(true);
+
+    const formData = new FormData();
+    formData.append('fullName', form.fullName);
+    formData.append('phone', form.phone);
+    formData.append('address', form.address);
+    if (file) formData.append('receipt', file);
+
     const res = await fetch('/api/order', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(form)
+      body: formData,
     });
+
+    setLoading(false);
     if (res.ok) setSubmitted(true);
+    else alert("Xatolik yuz berdi, qayta urinib ko'ring.");
   };
 
   return (
-    <div style={{ fontFamily: 'sans-serif', maxWidth: '800px', margin: '0 auto', padding: '40px 20px' }}>
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px' }}>
-        <h1 style={{ color: '#0070f3', margin: 0 }}>🔔 SmartBell</h1>
-        <a href="/admin" style={{ padding: '10px 18px', backgroundColor: '#333', color: '#fff', borderRadius: '6px', textDecoration: 'none', fontWeight: 'bold' }}>
-          Maktab Kabineti
+    <div className="min-h-screen bg-slate-50 font-sans text-slate-900">
+      <header className="max-w-6xl mx-auto px-6 py-6 flex justify-between items-center border-b border-slate-200">
+        <h1 className="text-2xl font-bold text-blue-600 flex items-center gap-2">🔔 Innobell</h1>
+        <a href="/admin" className="px-5 py-2 bg-slate-800 text-white text-sm font-semibold rounded-lg hover:bg-slate-700 transition">
+          Shaxsiy Kabinet
         </a>
       </header>
 
-      <main style={{ background: '#f9f9f9', padding: '30px', borderRadius: '12px', border: '1px solid #eaeaea' }}>
-        <h2>SmartBell Qurilmasiga Buyurtma Berish</h2>
-        <p>Maktab va muassasalar uchun avtomatlashtirilgan aqlli qo'ng'iroq tizimi.</p>
+      <main className="max-w-4xl mx-auto px-6 py-12">
+        <div className="text-center mb-12">
+          <h2 className="text-4xl font-extrabold mb-4">Ta'lim Muassasalari Uchun Aqlli Qo'ng'iroq Tizimi</h2>
+          <p className="text-slate-600 text-lg">Internet orqali avtomatik vaqt sinxronizatsiyasi, moslashuvchan dars jadvallari va avtonom ish rejimi.</p>
+        </div>
 
-        {submitted ? (
-          <div style={{ color: 'green', fontWeight: 'bold', padding: '20px 0' }}>
-            ✅ Buyurtmangiz qabul qilindi! Tez orada siz bilan bog'lanamiz.
+        {/* Xarid Paneli */}
+        <div className="bg-white p-8 rounded-2xl shadow-xl border border-slate-100">
+          <div className="flex justify-between items-center mb-6">
+            <h3 className="text-2xl font-bold">Xarid Qilish</h3>
+            <div className="text-right">
+              <span className="text-slate-400 line-through text-sm mr-2">799 000 so'm</span>
+              <span className="text-2xl font-extrabold text-emerald-600">599 000 so'm</span>
+            </div>
           </div>
-        ) : (
-          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '15px', marginTop: '20px' }}>
-            <input 
-              type="text" placeholder="F.I.Sh" required 
-              value={form.fullName} onChange={e => setForm({...form, fullName: e.target.value})}
-              style={{ padding: '12px', borderRadius: '6px', border: '1px solid #ccc' }}
-            />
-            <input 
-              type="text" placeholder="Telefon raqam" required 
-              value={form.phone} onChange={e => setForm({...form, phone: e.target.value})}
-              style={{ padding: '12px', borderRadius: '6px', border: '1px solid #ccc' }}
-            />
-            <input 
-              type="text" placeholder="Telegram Username / ID" 
-              value={form.telegramId} onChange={e => setForm({...form, telegramId: e.target.value})}
-              style={{ padding: '12px', borderRadius: '6px', border: '1px solid #ccc' }}
-            />
-            <textarea 
-              placeholder="Yetkazib berish manzili" 
-              value={form.address} onChange={e => setForm({...form, address: e.target.value})}
-              style={{ padding: '12px', borderRadius: '6px', border: '1px solid #ccc', height: '80px' }}
-            />
-            <button type="submit" style={{ padding: '14px', backgroundColor: '#0070f3', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '1rem', cursor: 'pointer', fontWeight: 'bold' }}>
-              Buyurtma yuborish
-            </button>
-          </form>
-        )}
+
+          {submitted ? (
+            <div className="bg-emerald-50 border border-emerald-200 text-emerald-700 p-6 rounded-xl text-center font-semibold">
+              ✅ Buyurtmangiz qabul qilindi! Adminlar chekni tekshirib, siz bilan tez orada bog'lanishadi.
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">Ism va Familiya *</label>
+                <input 
+                  type="text" required 
+                  className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                  value={form.fullName} onChange={e => setForm({...form, fullName: e.target.value})}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">Telefon Raqam *</label>
+                <input 
+                  type="text" required 
+                  className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                  value={form.phone} onChange={e => setForm({...form, phone: e.target.value})}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">Yetkazib Berish Manzili</label>
+                <textarea 
+                  className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                  value={form.address} onChange={e => setForm({...form, address: e.target.value})}
+                />
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                <p className="text-sm font-semibold mb-1">To'lov Uchun Karta Raqami:</p>
+                <p className="text-lg font-mono text-blue-600 font-bold mb-2">9860 1606 2661 3287 (Raxmatov Rasuljon)</p>
+                <label className="block text-sm font-medium mb-1">To'lov Chekini Yuklash (Fayl adminga yuboriladi):</label>
+                <input 
+                  type="file" accept="image/*,.pdf"
+                  onChange={e => setFile(e.target.files ? e.target.files[0] : null)}
+                  className="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                />
+              </div>
+
+              <button 
+                type="submit" disabled={loading}
+                className="w-full py-4 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition disabled:opacity-50">
+                {loading ? 'Yuborilmoqda...' : 'Buyurtma Berish'}
+              </button>
+            </form>
+          )}
+        </div>
       </main>
     </div>
   );
